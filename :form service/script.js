@@ -1,29 +1,34 @@
-// form-logger.js (type="module" 指定必須)
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-app.js";
-import {
-  getFirestore,
-  collection,
-  addDoc
-} from "https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore.js";
+// 🔹 form-logger.js（あなたの Firebase 用に調整済み）
+// 🔸 type="module" で読み込む必要があります
 
-// ==================== Firebase config ====================
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
+
+// ✅ Firebase構成（あなたのプロジェクト用）
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "yourproject.firebaseapp.com",
-  projectId: "yourproject-id",
+  apiKey: "AIzaSyDwQshILHqKVIlnO5dBEK1T5F2XhMqgP2s",
+  authDomain: "form-tool-stark.firebaseapp.com",
+  projectId: "form-tool-stark",
+  storageBucket: "form-tool-stark.appspot.com",
+  messagingSenderId: "668648297156",
+  appId: "1:668648297156:web:94e8b349342685f442ef91"
 };
+
+// 🔧 Firebase初期化
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// ==================== ユーティリティ ====================
-const sessionId = crypto.randomUUID();
+// ユーザーID（クライアント識別）を scriptタグの data-userid から取得
 const userId = document.currentScript.getAttribute("data-userid") || "unknown";
+
+// セッション識別子
+const sessionId = crypto.randomUUID();
 const pageUrl = window.location.href;
 const timestamp = Date.now();
 const scrollEvents = [];
 const formEvents = [];
 
-// ==================== スクロール監視 ====================
+// 📏 スクロール監視
 window.addEventListener("scroll", () => {
   const percent = Math.round(
     (window.scrollY + window.innerHeight) / document.body.scrollHeight * 100
@@ -31,7 +36,7 @@ window.addEventListener("scroll", () => {
   scrollEvents.push({ percent, timestamp: Date.now() });
 });
 
-// ==================== フォーム入力監視 ====================
+// 📝 フォーム入力監視
 function trackForm(form) {
   const formId = form.getAttribute("id") || "auto_form_" + Math.random().toString(36).substr(2, 5);
   const fields = form.querySelectorAll("input, textarea, select");
@@ -72,9 +77,9 @@ function trackForm(form) {
   });
 }
 
-// ==================== データ送信 ====================
+// 📤 Firestoreへ送信
 function sendData(status, formId) {
-  addDoc(collection(db, "form_logs"), {
+  const data = {
     userId,
     sessionId,
     pageUrl,
@@ -83,10 +88,14 @@ function sendData(status, formId) {
     timestamp,
     events: formEvents,
     scrollEvents
-  }).catch(err => console.error("データ送信エラー:", err));
+  };
+
+  addDoc(collection(db, "form_logs"), data)
+    .then(() => console.log("✅ Firestore送信成功！"))
+    .catch(err => console.error("❌ Firestore送信失敗:", err));
 }
 
-// ==================== 初期化 ====================
+// 🚀 DOM読み込み後に実行
 document.addEventListener("DOMContentLoaded", () => {
   const forms = document.querySelectorAll("form");
   forms.forEach(trackForm);
